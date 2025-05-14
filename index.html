@@ -4,40 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Räven hoppar!</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: #e0f7fa;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    #introPopup, #gameOverPopup {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-      z-index: 1000;
-      max-width: 90%;
-      width: 340px;
-      text-align: center;
-    }
-
-    #startBtn, #gameOverPopup button {
-      margin-top: 15px;
-      padding: 12px 24px;
-      background: #00c853;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="introPopup">
@@ -77,11 +44,13 @@
     const foxImg = new Image();
     foxImg.src = "https://i.ibb.co/ZpTgFfVf/Adorable-Chibi-Fox-Illustration.png";
 
+    const batteryImg = new Image();
+    batteryImg.src = "https://i.ibb.co/zh2hLJXF/Low-Battery-Icon.png";
+
     let fox = { x: 150, y: 600, width: 40, height: 40, vy: 0, gravity: 0.12, jumpStrength: -5.4 };
     let platforms = [], hazards = [], bonuses = [];
     let keys = {}, tilt = 0, score = 0, highestScore = 0, lives = 3;
     let visitedPlatforms = new Set(), scrollOffset = 0;
-
     const maxScore = 100;
 
     if (window.DeviceOrientationEvent) {
@@ -92,9 +61,11 @@
 
     function createPlatforms() {
       platforms = [];
+      hazards = [];
+      bonuses = [];
       visitedPlatforms.clear();
       scrollOffset = 0;
-      let lastX = 150, lastY = 650, lastSide = 'right';
+      let lastX = 150, lastY = 650;
       for (let i = 0; i < 30; i++) {
         let y = lastY - 100;
         let x = Math.random() * (canvas.width - 60);
@@ -185,19 +156,34 @@
     function endGame() {
       document.getElementById("finalScore").textContent = highestScore;
       const popup = document.getElementById("gameOverPopup");
+      const rewardSection = document.getElementById("rewardSection");
+      const noRewardSection = document.getElementById("noRewardSection");
+
       if (highestScore >= 25) {
-        document.getElementById("rewardCode").textContent = highestScore >= 50 ? "ABC100" : "XYZ30";
-        document.getElementById("rewardSection").style.display = "block";
-        document.getElementById("noRewardSection").style.display = "none";
+        const category = highestScore >= 50 ? 2 : 1;
+        fetch("https://script.google.com/macros/s/AKfycbwMo8LRdofYLb9ne7OpJbHLJjM6GT-csazPhyoYnBs833cHtJQPHPFrXZTN4Epi-KTV/exec?category=" + category)
+          .then(res => res.json())
+          .then(data => {
+            document.getElementById("rewardCode").textContent = data.code || "Inga koder kvar";
+            rewardSection.style.display = "block";
+            noRewardSection.style.display = "none";
+            popup.style.display = "block";
+          })
+          .catch(() => {
+            document.getElementById("rewardCode").textContent = "Fel vid hämtning av kod";
+            rewardSection.style.display = "block";
+            noRewardSection.style.display = "none";
+            popup.style.display = "block";
+          });
       } else {
-        document.getElementById("rewardSection").style.display = "none";
-        document.getElementById("noRewardSection").style.display = "block";
+        rewardSection.style.display = "none";
+        noRewardSection.style.display = "block";
+        popup.style.display = "block";
       }
-      popup.style.display = "block";
     }
 
     function goBack() {
-      alert("Skulle öppna appen via leccyapp://home");
+      window.location.href = "leccyapp://home";
     }
 
     document.getElementById("startBtn").addEventListener("click", () => {
@@ -211,3 +197,4 @@
   </script>
 </body>
 </html>
+

@@ -11,7 +11,7 @@
     <h2>Hjälp Leccy!</h2>
     <p>Samla poäng genom att hoppa mellan plattformar.</p>
     <p>Du har tre liv = ❤️❤️❤️</p>
-    <p>Varje gång du faller eller nuddar ett lågt batteri förlorar du ett liv och börjar om från början.</p>
+    <p>Varje gång du faller eller nuddar ett ☠️ så förlorar du ett liv och börjar om från början.</p>
     <p><strong>Tips: luta mobilen för att styra räven!</strong></p>
     <div style="margin: 16px 0; background: #f8f8f8; padding: 12px; border-radius: 8px;">
       <strong>🎁 Vinsttabell:</strong><br>
@@ -44,13 +44,10 @@
     const foxImg = new Image();
     foxImg.src = "https://i.ibb.co/ZpTgFfVf/Adorable-Chibi-Fox-Illustration.png";
 
-    const batteryImg = new Image();
-    batteryImg.src = "https://i.ibb.co/zh2hLJXF/Low-Battery-Icon.png";
-
     let fox = { x: 150, y: 600, width: 40, height: 40, vy: 0, gravity: 0.12, jumpStrength: -5.4 };
-    let platforms = [], hazards = [], bonuses = [];
-    let keys = {}, tilt = 0, score = 0, highestScore = 0, lives = 3;
-    let visitedPlatforms = new Set(), scrollOffset = 0;
+    let platforms = [], hazards = [], keys = {}, tilt = 0;
+    let score = 0, highestScore = 0, lives = 3, scrollOffset = 0;
+    let visitedPlatforms = new Set();
     const maxScore = 100;
 
     if (window.DeviceOrientationEvent) {
@@ -62,14 +59,16 @@
     function createPlatforms() {
       platforms = [];
       hazards = [];
-      bonuses = [];
       visitedPlatforms.clear();
       scrollOffset = 0;
-      let lastX = 150, lastY = 650;
-      for (let i = 0; i < 30; i++) {
+      let lastY = 650;
+      for (let i = 0; i < 100; i++) {
         let y = lastY - 100;
         let x = Math.random() * (canvas.width - 60);
         platforms.push({ x, y, width: 60 });
+        if (i > 20 && Math.random() < 0.3) {
+          hazards.push({ x: x + 20, y: y - 20 });
+        }
         lastY = y;
       }
       fox.x = platforms[0].x + 20;
@@ -84,6 +83,13 @@
     function drawPlatforms() {
       ctx.fillStyle = "#0077FF";
       platforms.forEach(p => ctx.fillRect(p.x, p.y + scrollOffset, p.width, 10));
+    }
+
+    function drawHazards() {
+      ctx.font = "22px sans-serif";
+      hazards.forEach(h => {
+        ctx.fillText("☠️", h.x, h.y + scrollOffset);
+      });
     }
 
     function drawUI() {
@@ -122,11 +128,30 @@
         }
       });
 
+      hazards.forEach((h) => {
+        let hY = h.y + scrollOffset;
+        if (
+          fox.x + fox.width > h.x &&
+          fox.x < h.x + 30 &&
+          fox.y + fox.height > hY &&
+          fox.y < hY + 30
+        ) {
+          lives--;
+          if (lives > 0) {
+            createPlatforms();
+            score = 0;
+          } else {
+            endGame();
+          }
+        }
+      });
+
       if (fox.y < canvas.height / 2) {
         let delta = canvas.height / 2 - fox.y;
         scrollOffset += delta;
         fox.y = canvas.height / 2;
         platforms.forEach(p => p.y += delta);
+        hazards.forEach(h => h.y += delta);
       }
 
       if (fox.y > canvas.height) {
@@ -143,6 +168,7 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawPlatforms();
+      drawHazards();
       drawFox();
       drawUI();
     }

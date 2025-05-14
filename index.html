@@ -1,11 +1,43 @@
-
 <!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Räven hoppar!</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #e0f7fa;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #introPopup, #gameOverPopup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      z-index: 1000;
+      max-width: 90%;
+      width: 340px;
+      text-align: center;
+    }
+
+    #startBtn, #gameOverPopup button {
+      margin-top: 15px;
+      padding: 12px 24px;
+      background: #00c853;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <div id="introPopup">
@@ -13,6 +45,7 @@
     <p>Samla poäng genom att hoppa mellan plattformar.</p>
     <p>Du har tre liv = ❤️❤️❤️</p>
     <p>Varje gång du faller eller nuddar ett lågt batteri förlorar du ett liv och börjar om från början.</p>
+    <p><strong>Tips: luta mobilen för att styra räven!</strong></p>
     <div style="margin: 16px 0; background: #f8f8f8; padding: 12px; border-radius: 8px;">
       <strong>🎁 Vinsttabell:</strong><br>
       25 poäng = 30 kr att ladda för<br>
@@ -44,103 +77,31 @@
     const foxImg = new Image();
     foxImg.src = "https://i.ibb.co/ZpTgFfVf/Adorable-Chibi-Fox-Illustration.png";
 
-    const batteryImg = new Image();
-    batteryImg.src = "https://i.ibb.co/zh2hLJXF/Low-Battery-Icon.png";
+    let fox = { x: 150, y: 600, width: 40, height: 40, vy: 0, gravity: 0.12, jumpStrength: -5.4 };
+    let platforms = [], hazards = [], bonuses = [];
+    let keys = {}, tilt = 0, score = 0, highestScore = 0, lives = 3;
+    let visitedPlatforms = new Set(), scrollOffset = 0;
 
-    let fox = {
-      x: 150,
-      y: 600,
-      width: 40,
-      height: 40,
-      vy: 0,
-      gravity: 0.12,
-      jumpStrength: -5.4,
-    };
-
-    let platforms = [];
-    const platformCount = 100;
-    const platformHeight = 10;
-    let verticalSpacing = 100;
-
-    let hazards = [];
-    const hazardSize = 20;
-
-    let bonuses = [];
-    const bonusSize = 20;
-    let bonusGiven = false;
-
-    let tilt = 0;
-let keys = {};
-    let scrollOffset = 0;
-    let score = 0;
-    let highestScore = 0;
-    let lives = 3;
-    let visitedPlatforms = new Set();
     const maxScore = 100;
 
-
-let tilt = 0;
-if (window.DeviceOrientationEvent) {
-  window.addEventListener("deviceorientation", e => {
-    tilt = e.gamma;
-  }, true);
-}
-
-
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener("deviceorientation", function (event) {
+        tilt = event.gamma;
+      });
+    }
 
     function createPlatforms() {
       platforms = [];
-      hazards = [];
-      bonuses = [];
-      visitedPlatforms = new Set();
+      visitedPlatforms.clear();
       scrollOffset = 0;
-      bonusGiven = false;
-
-      let lastX = 150;
-      let lastY = 650;
-      let lastSide = 'right';
-
-      for (let i = 0; i < platformCount; i++) {
-        verticalSpacing = i < 15 ? 100 : i < 30 ? 110 : 130;
-        if (i > 30 && i % 5 === 0) continue;
-
-        let y = lastY - verticalSpacing + Math.random() * 10 - 5;
-        let shift = Math.random() * 70 + 130;
-        let x;
-
-        const changeSide = Math.random() < 0.7;
-        if (changeSide) {
-          if (lastSide === 'right') {
-            x = Math.max(0, lastX - shift);
-            lastSide = 'left';
-          } else {
-            x = Math.min(canvas.width - 60, lastX + shift);
-            lastSide = 'right';
-          }
-        } else {
-          const jitter = Math.random() * 60 - 30;
-          x = Math.min(canvas.width - 60, Math.max(0, lastX + jitter));
-        }
-
-        let width = i >= 30 ? Math.floor(Math.random() * 20) + 40 : 60;
-        platforms.push({ x, y, width });
-
-        if (i > 20 && Math.random() < 0.4) {
-          let safeMargin = 10;
-          let hazardX = x + safeMargin + Math.random() * (width - hazardSize - safeMargin * 2);
-          hazards.push({ x: hazardX, y: y - hazardSize });
-        }
-
-        if (!bonusGiven && i >= 50) {
-          bonuses.push({ x: x + width / 2 - bonusSize / 2, y: y - bonusSize });
-          bonusGiven = true;
-        }
-
-        lastX = x;
+      let lastX = 150, lastY = 650, lastSide = 'right';
+      for (let i = 0; i < 30; i++) {
+        let y = lastY - 100;
+        let x = Math.random() * (canvas.width - 60);
+        platforms.push({ x, y, width: 60 });
         lastY = y;
       }
-
-      fox.x = platforms[0].x + platforms[0].width / 2 - fox.width / 2;
+      fox.x = platforms[0].x + 20;
       fox.y = platforms[0].y - fox.height;
       fox.vy = 0;
     }
@@ -151,38 +112,12 @@ if (window.DeviceOrientationEvent) {
 
     function drawPlatforms() {
       ctx.fillStyle = "#0077FF";
-      platforms.forEach((p) => {
-        ctx.fillRect(p.x, p.y + scrollOffset, p.width, platformHeight);
-      });
-    }
-
-    function drawHazards() {
-      ctx.fillStyle = "black";
-      ctx.font = "20px serif";
-      hazards.forEach((h) => {
-        ctx.fillText("☠️", h.x, h.y + scrollOffset + 20);
-      });
-    }
-
-    function drawBonuses() {
-      ctx.fillStyle = "gold";
-      bonuses.forEach((b) => {
-        ctx.fillRect(b.x, b.y + scrollOffset, bonusSize, bonusSize);
-      });
+      platforms.forEach(p => ctx.fillRect(p.x, p.y + scrollOffset, p.width, 10));
     }
 
     function drawUI() {
       ctx.font = "20px sans-serif";
-      for (let i = 0; i < lives; i++) {
-        ctx.fillText("❤️", 12 + i * 22, 26);
-      }
-
-      ctx.fillStyle = "#ccc";
-      ctx.fillRect(10, 40, 100, 10);
-      ctx.fillStyle = "#00c853";
-      const fillWidth = Math.min(score / maxScore, 1) * 100;
-      ctx.fillRect(10, 40, fillWidth, 10);
-
+      for (let i = 0; i < lives; i++) ctx.fillText("❤️", 12 + i * 22, 26);
       ctx.fillStyle = "#000";
       ctx.fillText("Poäng: " + score, 10, 70);
     }
@@ -193,60 +128,26 @@ if (window.DeviceOrientationEvent) {
 
       if (keys["ArrowLeft"]) fox.x -= 2;
       if (keys["ArrowRight"]) fox.x += 2;
-
       if (Math.abs(tilt) > 2) fox.x += tilt * 0.15;
-
 
       if (fox.x < 0) fox.x = 0;
       if (fox.x + fox.width > canvas.width) fox.x = canvas.width - fox.width;
 
-      platforms.forEach((p, index) => {
-        let pY = p.y + scrollOffset;
+      platforms.forEach((p, i) => {
+        const pY = p.y + scrollOffset;
         if (
           fox.vy > 0 &&
           fox.x + fox.width > p.x &&
           fox.x < p.x + p.width &&
           fox.y + fox.height >= pY &&
-          fox.y + fox.height <= pY + platformHeight
+          fox.y + fox.height <= pY + 10
         ) {
           fox.vy = fox.jumpStrength;
-          if (!visitedPlatforms.has(index)) {
+          if (!visitedPlatforms.has(i)) {
             score++;
-            visitedPlatforms.add(index);
             if (score > highestScore) highestScore = score;
+            visitedPlatforms.add(i);
           }
-        }
-      });
-
-      hazards.forEach((h) => {
-        let hY = h.y + scrollOffset;
-        if (
-          fox.x + fox.width > h.x &&
-          fox.x < h.x + hazardSize &&
-          fox.y + fox.height > hY &&
-          fox.y < hY + hazardSize
-        ) {
-          lives--;
-          hazards.splice(hazards.indexOf(h), 1);
-          if (lives > 0) {
-            createPlatforms();
-            score = 0;
-          } else {
-            endGame();
-          }
-        }
-      });
-
-      bonuses.forEach((b, i) => {
-        let bY = b.y + scrollOffset;
-        if (
-          fox.x + fox.width > b.x &&
-          fox.x < b.x + bonusSize &&
-          fox.y + fox.height > bY &&
-          fox.y < bY + bonusSize
-        ) {
-          if (lives < 3) lives++;
-          bonuses.splice(i, 1);
         }
       });
 
@@ -254,9 +155,7 @@ if (window.DeviceOrientationEvent) {
         let delta = canvas.height / 2 - fox.y;
         scrollOffset += delta;
         fox.y = canvas.height / 2;
-        platforms.forEach((p) => (p.y += delta));
-        hazards.forEach((h) => (h.y += delta));
-        bonuses.forEach((b) => (b.y += delta));
+        platforms.forEach(p => p.y += delta);
       }
 
       if (fox.y > canvas.height) {
@@ -273,8 +172,6 @@ if (window.DeviceOrientationEvent) {
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawPlatforms();
-      drawHazards();
-      drawBonuses();
       drawFox();
       drawUI();
     }
@@ -286,52 +183,31 @@ if (window.DeviceOrientationEvent) {
     }
 
     function endGame() {
-      const popup = document.getElementById("gameOverPopup");
-      const rewardSection = document.getElementById("rewardSection");
-      const noRewardSection = document.getElementById("noRewardSection");
-
       document.getElementById("finalScore").textContent = highestScore;
-
+      const popup = document.getElementById("gameOverPopup");
       if (highestScore >= 25) {
-        const category = highestScore >= 50 ? 2 : 1;
-        fetch("https://script.google.com/macros/s/AKfycbwMo8LRdofYLb9ne7OpJbHLJjM6GT-csazPhyoYnBs833cHtJQPHPFrXZTN4Epi-KTV/exec?category=" + category)
-          .then(res => res.json())
-          .then(data => {
-            document.getElementById("rewardCode").textContent = data.code || "Inga koder kvar";
-            rewardSection.style.display = "block";
-            noRewardSection.style.display = "none";
-            popup.style.display = "block";
-          })
-          .catch(() => {
-            document.getElementById("rewardCode").textContent = "Fel vid hämtning av kod";
-            rewardSection.style.display = "block";
-            noRewardSection.style.display = "none";
-            popup.style.display = "block";
-          });
+        document.getElementById("rewardCode").textContent = highestScore >= 50 ? "ABC100" : "XYZ30";
+        document.getElementById("rewardSection").style.display = "block";
+        document.getElementById("noRewardSection").style.display = "none";
       } else {
-        rewardSection.style.display = "none";
-        noRewardSection.style.display = "block";
-        popup.style.display = "block";
+        document.getElementById("rewardSection").style.display = "none";
+        document.getElementById("noRewardSection").style.display = "block";
       }
+      popup.style.display = "block";
     }
 
     function goBack() {
-      window.location.href = "leccyapp://home";
+      alert("Skulle öppna appen via leccyapp://home");
     }
 
-    const streak = 7;
     document.getElementById("startBtn").addEventListener("click", () => {
       document.getElementById("introPopup").style.display = "none";
-      if (streak >= 7) {
-        createPlatforms();
-        gameLoop();
-      } else {
-        alert("Du måste ha en streak på 7 dagar på lyckohjulet för att spela!");
-      }
+      createPlatforms();
+      gameLoop();
     });
 
-    document.addEventListener("keydown", (e) => (keys[e.key] = true));
-    document.addEventListener("keyup", (e) => (keys[e.key] = false));
+    document.addEventListener("keydown", e => keys[e.key] = true);
+    document.addEventListener("keyup", e => keys[e.key] = false);
   </script>
 </body>
 </html>

@@ -48,9 +48,11 @@
     let platforms = [], hazards = [], keys = {}, tilt = 0;
     let score = 0, highestScore = 0, lives = 3, scrollOffset = 0;
     let visitedPlatforms = new Set();
+    let gameEnded = false;
+    let rewardFetched = false;
+
     const maxScore = 100;
 
-    // Gyroskopstyrning
     if (window.DeviceOrientationEvent) {
       window.addEventListener("deviceorientation", function (event) {
         tilt = event.gamma || 0;
@@ -101,6 +103,8 @@
     }
 
     function update() {
+      if (gameEnded) return;
+
       fox.vy += fox.gravity;
       fox.y += fox.vy;
 
@@ -108,7 +112,6 @@
       if (keys["ArrowRight"]) fox.x += 2;
       if (Math.abs(tilt) > 2) fox.x += tilt * 0.15;
 
-      // Begränsa rörelse inom canvas
       fox.x = Math.max(0, Math.min(canvas.width - fox.width, fox.x));
 
       platforms.forEach((p, i) => {
@@ -125,11 +128,14 @@
             score++;
             highestScore = Math.max(highestScore, score);
             visitedPlatforms.add(i);
+            if (highestScore >= 50 && !gameEnded) {
+              endGame();
+              return;
+            }
           }
         }
       });
 
-      // Kollision med dödskallar (justerad zon)
       hazards.forEach((h) => {
         let hY = h.y + scrollOffset;
         if (
@@ -176,12 +182,18 @@
     }
 
     function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
+      if (!gameEnded) {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
     }
 
     function endGame() {
+      if (rewardFetched) return;
+      rewardFetched = true;
+      gameEnded = true;
+
       document.getElementById("finalScore").textContent = highestScore;
       const popup = document.getElementById("gameOverPopup");
       const rewardSection = document.getElementById("rewardSection");

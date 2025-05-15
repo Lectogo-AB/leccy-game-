@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ditt resultat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      min-height: 100vh;
+      background: linear-gradient(to bottom, #f3f4f6, #e0e0e0);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .result-box {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    p {
+      font-size: 18px;
+      margin: 10px 0;
+    }
+
+    .code-box {
+      font-size: 20px;
+      font-weight: bold;
+      background: #f0f0f0;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background: #00c853;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    button:hover {
+      background: #00b04c;
+    }
+  </style>
+</head>
+<body>
+  <div class="result-box">
+    <h1>Ditt resultat</h1>
+    <p id="scoreText">Poäng: ...</p>
+    <div id="winSection" style="display: none;">
+      <p>🎉 Du har vunnit laddkrediter!</p>
+      <div class="code-box" id="codeBox">Kod: ...</div>
+    </div>
+    <div id="loseSection" style="display: none;">
+      <p>Försök igen nästa vecka!<br>Snurra lyckohjulet varje dag för en ny chans.</p>
+    </div>
+    <button onclick="goBack()">Tillbaka till appen</button>
+  </div>
+
+  <script>
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    const score = getQueryParam("score");
+    const code = getQueryParam("code");
+
+    document.getElementById("scoreText").textContent = `Poäng: ${score}`;
+
+    if (code) {
+      document.getElementById("winSection").style.display = "block";
+      document.getElementById("codeBox").textContent = `Kod: ${decodeURIComponent(code)}`;
+    } else {
+      document.getElementById("loseSection").style.display = "block";
+    }
+
+    function goBack() {
+      window.location.href = "leccyapp://home";
+    }
+  </script>
+</body>
+</html>

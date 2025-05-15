@@ -50,9 +50,10 @@
     let visitedPlatforms = new Set();
     const maxScore = 100;
 
+    // Gyroskopstyrning
     if (window.DeviceOrientationEvent) {
       window.addEventListener("deviceorientation", function (event) {
-        tilt = event.gamma;
+        tilt = event.gamma || 0;
       });
     }
 
@@ -107,8 +108,8 @@
       if (keys["ArrowRight"]) fox.x += 2;
       if (Math.abs(tilt) > 2) fox.x += tilt * 0.15;
 
-      if (fox.x < 0) fox.x = 0;
-      if (fox.x + fox.width > canvas.width) fox.x = canvas.width - fox.width;
+      // Begränsa rörelse inom canvas
+      fox.x = Math.max(0, Math.min(canvas.width - fox.width, fox.x));
 
       platforms.forEach((p, i) => {
         const pY = p.y + scrollOffset;
@@ -122,19 +123,20 @@
           fox.vy = fox.jumpStrength;
           if (!visitedPlatforms.has(i)) {
             score++;
-            if (score > highestScore) highestScore = score;
+            highestScore = Math.max(highestScore, score);
             visitedPlatforms.add(i);
           }
         }
       });
 
+      // Kollision med dödskallar (justerad zon)
       hazards.forEach((h) => {
         let hY = h.y + scrollOffset;
         if (
-          fox.x + fox.width > h.x &&
-          fox.x < h.x + 30 &&
-          fox.y + fox.height > hY &&
-          fox.y < hY + 30
+          fox.x + fox.width > h.x + 5 &&
+          fox.x < h.x + 15 &&
+          fox.y + fox.height > hY + 5 &&
+          fox.y < hY + 15
         ) {
           lives--;
           if (lives > 0) {
@@ -223,4 +225,3 @@
   </script>
 </body>
 </html>
-

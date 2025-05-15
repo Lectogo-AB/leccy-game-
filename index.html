@@ -21,20 +21,6 @@
     <button id="startBtn">Starta spelet</button>
   </div>
 
-  <div id="gameOverPopup" style="display:none;">
-    <h3 id="gameOverTitle">Game Over!</h3>
-    <p>Poäng: <span id="finalScore">0</span></p>
-    <div id="rewardSection" style="display:none;">
-      <p>🎉 Du vann laddkrediter!<br>
-      Din kod är:<br><strong id="rewardCode">XXXXX</strong></p>
-    </div>
-    <div id="noRewardSection" style="display:none;">
-      <p>Försök igen nästa vecka!<br>
-      Snurra lyckohjulet varje dag för en ny chans.</p>
-    </div>
-    <button onclick="goBack()">Tillbaka till appen</button>
-  </div>
-
   <canvas id="gameCanvas" width="375" height="667"></canvas>
 
   <script>
@@ -194,36 +180,21 @@
       rewardFetched = true;
       gameEnded = true;
 
-      document.getElementById("finalScore").textContent = highestScore;
-      const popup = document.getElementById("gameOverPopup");
-      const rewardSection = document.getElementById("rewardSection");
-      const noRewardSection = document.getElementById("noRewardSection");
-
-      if (highestScore >= 25) {
-        const category = highestScore >= 50 ? 2 : 1;
+      const category = highestScore >= 50 ? 2 : highestScore >= 25 ? 1 : 0;
+      if (category === 0) {
+        // Gå till resultat.html utan kod
+        window.location.href = `resultat.html?score=${highestScore}`;
+      } else {
         fetch("https://script.google.com/macros/s/AKfycbwMo8LRdofYLb9ne7OpJbHLJjM6GT-csazPhyoYnBs833cHtJQPHPFrXZTN4Epi-KTV/exec?category=" + category)
           .then(res => res.json())
           .then(data => {
-            document.getElementById("rewardCode").textContent = data.code || "Inga koder kvar";
-            rewardSection.style.display = "block";
-            noRewardSection.style.display = "none";
-            popup.style.display = "block";
+            const kod = encodeURIComponent(data.code || "Ingen kod tillgänglig");
+            window.location.href = `resultat.html?score=${highestScore}&code=${kod}`;
           })
           .catch(() => {
-            document.getElementById("rewardCode").textContent = "Fel vid hämtning av kod";
-            rewardSection.style.display = "block";
-            noRewardSection.style.display = "none";
-            popup.style.display = "block";
+            window.location.href = `resultat.html?score=${highestScore}&code=Fel+vid+hämtning`;
           });
-      } else {
-        rewardSection.style.display = "none";
-        noRewardSection.style.display = "block";
-        popup.style.display = "block";
       }
-    }
-
-    function goBack() {
-      window.location.href = "leccyapp://home";
     }
 
     document.getElementById("startBtn").addEventListener("click", () => {

@@ -12,7 +12,7 @@
     <p>Samla poäng genom att hoppa mellan plattformar.</p>
     <p>Du har tre liv = ❤️❤️❤️</p>
     <p>Varje gång du faller eller nuddar ett ☠️ så förlorar du ett liv och börjar om från början.</p>
-    <p><strong>Tips: luta mobilen för att styra räven!</strong></p>
+    <p><strong>Instruktioner: Du styr Leccy genom att luta mobilen</strong></p>
     <div style="margin: 16px 0; background: #f8f8f8; padding: 12px; border-radius: 8px;">
       <strong>🎁 Vinsttabell:</strong><br>
       25 poäng = 30 kr att ladda för<br>
@@ -83,9 +83,9 @@
 
     function drawUI() {
       ctx.font = "20px sans-serif";
-      for (let i = 0; i < lives; i++) ctx.fillText("❤️", 12 + i * 22, 26);
+      for (let i = 0; i < lives; i++) ctx.fillText("❤️", 12 + i * 22, 50); // Justerat från 26 till 50
       ctx.fillStyle = "#000";
-      ctx.fillText("Poäng: " + score, 10, 70);
+      ctx.fillText("Poäng: " + score, 10, 80); // Justerat från 70 till 80
     }
 
     function update() {
@@ -182,7 +182,6 @@
 
       const category = highestScore >= 50 ? 2 : highestScore >= 25 ? 1 : 0;
       if (category === 0) {
-        // Gå till resultat.html utan kod
         window.location.href = `resultat.html?score=${highestScore}`;
       } else {
         fetch("https://script.google.com/macros/s/AKfycbwMo8LRdofYLb9ne7OpJbHLJjM6GT-csazPhyoYnBs833cHtJQPHPFrXZTN4Epi-KTV/exec?category=" + category)

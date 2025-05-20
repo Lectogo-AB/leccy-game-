@@ -3,129 +3,296 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Ditt resultat</title>
+  <title>Spin & Win | LecToGo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/zarocknz/javascript-winwheel@master/Winwheel.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      min-height: 100vh;
-      background: linear-gradient(to bottom, #f3f4f6, #e0e0e0);
+    html, body {
       text-align: center;
-      padding: 20px;
+      font-family: 'Poppins', Arial, sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding-top: 20px;
     }
-
-    .result-box {
-      background: white;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-      max-width: 400px;
-      width: 100%;
-    }
-
     h1 {
-      margin-top: 0;
-      color: #333;
+      color: #111;
+      font-size: 1rem;
+      margin-bottom: 5px;
     }
-
-    p {
-      font-size: 18px;
-      margin: 10px 0;
+    #streakBar {
+      margin-top: 10px;
+      min-height: 60px;
+      transition: opacity 0.3s ease;
     }
-
-    .code-box {
-      font-size: 20px;
-      font-weight: bold;
-      background: #f0f0f0;
-      padding: 10px 20px;
-      border-radius: 8px;
-      margin: 15px 0;
+    .canvas-container {
+      width: 90%;
+      max-width: 350px;
+      margin: 10px auto;
     }
-
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      background: #00c853;
+    .pointer {
+      width: 0;
+      height: 0;
+      border-left: 12px solid transparent;
+      border-right: 12px solid transparent;
+      border-top: 20px solid #333;
+      margin: 10px auto;
+    }
+    .spin-btn {
+      background-color: #3b82f6;
       color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      margin-top: 15px;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    .result {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    .copy-btn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    #copyMessage {
+      margin-top: 8px;
+      color: green;
+      font-size: 14px;
+    }
+    .bonus-btn {
+      background-color: #facc15;
+      color: #000;
+      padding: 10px 20px;
+      margin-top: 12px;
+      font-weight: bold;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      background: #00b04c;
-    }
-
-    .copy-feedback {
-      color: green;
-      font-size: 14px;
-      margin-top: 8px;
     }
   </style>
 </head>
 <body>
-  <div class="result-box">
-    <h1>Ditt resultat</h1>
-    <p id="scoreText">Poäng: ...</p>
-
-    <div id="winSection" style="display: none;">
-      <p>🎉 Du har vunnit laddkrediter!</p>
-      <div class="code-box" id="codeBox">Kod: ...</div>
-      <button onclick="copyCode()">Kopiera kod</button>
-    </div>
-
-    <div id="loseSection" style="display: none;">
-      <p>Försök igen nästa vecka!<br>Snurra lyckohjulet varje dag för en ny chans.</p>
-    </div>
-
-    <button onclick="goBack()">Tillbaka till appen</button>
+  <h1🎉 Snurra varje dag – en hemlig bonus väntar efter 7 dagar!</h1>
+  <div id="streakBar"><em>Laddar streak...</em></div>
+  <div class="pointer"></div>
+  <div class="canvas-container">
+    <canvas id="canvas" width="350" height="350"></canvas>
   </div>
+  <button class="spin-btn" onclick="spin()">🎯 Snurra hjulet</button>
+  <div class="result" id="result"></div>
 
   <script>
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
+    const backendScriptURL = "https://script.google.com/macros/s/AKfycbwfOZfwZ2chXrdIjxg1g05StEeiHaCTQDSL3mbOfrmOVdvWKzmAINNnJ80P4yjTF25d/exec";
+    const streakScriptURL = "https://script.google.com/macros/s/AKfycbxC035Wq-cOtNZXClfmdKPLxSn_NdOblFc9EIMCMm_vdV9MuMUbdiqjWtD9gEMZbwe6/exec";
+    const bonusPageURL = "https://leccygame.netlify.app/";
+
+    const segments = [
+      { fillStyle: '#42a5f5', text: '5 kr' },
+      { fillStyle: '#1e88e5', text: '10 kr' },
+      { fillStyle: '#008F4C', text: '20 kr' },
+      { fillStyle: '#FF404A', text: '0 kr' },
+      { fillStyle: '#42a5f5', text: '5 kr' },
+      { fillStyle: '#4caf50', text: '100 kr' }
+    ];
+    const probabilities = [0.20, 0.15, 0.05, 0.445, 0.20, 0.005];
+
+    const theWheel = new Winwheel({
+      canvasId: 'canvas',
+      numSegments: segments.length,
+      outerRadius: 170,
+      segments: segments,
+      textFontFamily: 'Poppins',
+      textFontSize: 20,
+      textFillStyle: '#FFF',
+      animation: {
+        type: 'spinToStop',
+        duration: 5,
+        spins: 5,
+        callbackFinished: handleResult
+      }
+    });
+
+    let resultSegment = null;
+    let preloadedCode = null;
+    const userId = getUserId();
+
+    document.addEventListener('DOMContentLoaded', () => {
+      displayStreakBar(userId);
+    });
+
+    function getUserId() {
+      const params = new URLSearchParams(window.location.search);
+      let id = params.get('user_id');
+      if (!id) {
+        id = localStorage.getItem('userId');
+        if (!id) {
+          id = 'user-' + Date.now();
+          localStorage.setItem('userId', id);
+        }
+      }
+      return id;
     }
 
-    const score = getQueryParam("score");
-    const code = getQueryParam("code");
-
-    document.getElementById("scoreText").textContent = `Poäng: ${score}`;
-
-    if (code) {
-      document.getElementById("winSection").style.display = "block";
-      document.getElementById("codeBox").textContent = `Kod: ${decodeURIComponent(code)}`;
-    } else {
-      document.getElementById("loseSection").style.display = "block";
+    function canSpin() {
+      const lastSpinDate = localStorage.getItem('lastSpinDate');
+      const today = new Date().toISOString().split('T')[0];
+      return lastSpinDate !== today;
     }
 
-    function goBack() {
-      window.history.back();
+    function saveSpinDate() {
+      const today = new Date().toISOString().split('T')[0];
+      localStorage.setItem('lastSpinDate', today);
+    }
+
+    function spin() {
+      if (!canSpin()) {
+        document.getElementById('result').innerHTML = '⏰ Du har redan snurrat idag!';
+        return;
+      }
+
+      const rand = Math.random();
+      let cumulative = 0;
+      let segmentIndex = 0;
+      for (let i = 0; i < probabilities.length; i++) {
+        cumulative += probabilities[i];
+        if (rand < cumulative) {
+          segmentIndex = i + 1;
+          break;
+        }
+      }
+
+      resultSegment = segments[segmentIndex - 1];
+      preloadReward(resultSegment.text);
+      theWheel.stopAnimation(false);
+      theWheel.rotationAngle = 0;
+      theWheel.animation.stopAngle = theWheel.getRandomForSegment(segmentIndex);
+      theWheel.startAnimation();
+      saveSpinDate();
+    }
+
+    function preloadReward(text) {
+      const category = getCategory(text);
+      if (category === null) return;
+      fetch(${backendScriptURL}?value_category=${category}&user_id=${userId})
+        .then(r => r.json())
+        .then(data => preloadedCode = data.code || null);
+    }
+
+    function handleResult(segment) {
+      const resultDiv = document.getElementById('result');
+      const text = segment.text;
+
+      if (text === '0 kr') {
+        fetch(${backendScriptURL}?value_category=0&user_id=${userId});
+        resultDiv.innerHTML = 😔 Tyvärr blev det ingen vinst den här gången - prova igen imorgon!;
+      } else {
+        resultDiv.innerHTML = 🎉 Du vann: ${text}!<br/>Din kod: <strong id="promoCode">${preloadedCode || 'Hämtas...'}</strong><br/><button class="copy-btn" onclick="copyCode()">📋 Kopiera koden</button><div id="copyMessage"></div><br/>Aktivera koden i appen nu – gäller endast i 1 timme!;
+      }
+
+      displayStreakBar(userId);
+    }
+
+    function getCategory(text) {
+      switch (text) {
+        case '5 kr': return 1;
+        case '10 kr': return 2;
+        case '20 kr': return 3;
+        case '100 kr': return 4;
+        case '0 kr': return 0;
+        default: return null;
+      }
+    }
+
+    function displayStreakBar(userId) {
+      fetch(${streakScriptURL}?get_dates=true&user_id=${userId})
+        .then(res => res.json())
+        .then(data => {
+          let streak = calculateStreak(data.dates || []);
+          const maxStreak = 7;
+
+          let barHTML = '<div style="display: flex; justify-content: center; gap: 6px;">';
+          for (let i = 1; i <= maxStreak; i++) {
+            if (i <= streak) {
+              barHTML += <div style="width: 20px; height: 20px; background: #f97316; border-radius: 4px;"></div>;
+            } else if (i === maxStreak) {
+              barHTML += <div style="width: 40px; height: 20px; background: #facc15; font-size: 10px; font-weight: bold; border-radius: 4px; display: flex; align-items: center; justify-content: center;">🎯</div>;
+            } else {
+              barHTML += <div style="width: 20px; height: 20px; background: #e5e7eb; border-radius: 4px;"></div>;
+            }
+          }
+          barHTML += '</div>';
+
+          let belowText = <div style="margin-top: 6px; font-size: 14px; color: #444;">;
+          if (streak < 7) {
+            belowText += Kom tillbaka och snurra imorgon – bara ${7 - streak} dag(ar) kvar för att låsa upp bonusen!;
+          } else {
+            belowText += Bra jobbat! Du har låst upp bonusen – klicka på knappen för att börja!<br/>
+            <span style="font-size: 13px; color: #666;">🌀 Du får en ny bonus varje gång du når 7 dagar i rad!</span>;
+          }
+          belowText += </div>;
+
+          if (streak === 7) {
+            belowText += <button class="bonus-btn" onclick="window.location.href='${bonusPageURL}'">🚀 Starta bonusutmaningen</button>;
+          }
+
+          document.getElementById('streakBar').innerHTML = barHTML + belowText;
+        })
+        .catch(() => {
+          document.getElementById('streakBar').innerText = '⚠️ Kunde inte hämta streak.';
+        });
+    }
+
+    function calculateStreak(dateStrings) {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const dates = Array.from(new Set(dateStrings))
+        .map(str => new Date(str))
+        .sort((a, b) => a - b);
+
+      if (dates.length === 0) return 0;
+
+      let streak = 1;
+      let lastValidDate = dates[0];
+
+      for (let i = 1; i < dates.length; i++) {
+        const diff = (dates[i] - lastValidDate) / (1000 * 60 * 60 * 24);
+        if (diff === 1) {
+          streak++;
+          lastValidDate = dates[i];
+        } else if (diff > 1) {
+          streak = 1;
+          lastValidDate = dates[i];
+        }
+
+        if (streak > 7) {
+          streak = 1;
+        }
+      }
+
+      const lastDateStr = lastValidDate.toISOString().split('T')[0];
+      if (lastDateStr !== todayStr && streak === 7) {
+        return 0;
+      }
+
+      return streak;
     }
 
     function copyCode() {
-      const code = document.getElementById("codeBox").textContent.replace("Kod: ", "").trim();
+      const code = document.getElementById('promoCode')?.innerText;
+      if (!code) return;
       navigator.clipboard.writeText(code).then(() => {
-        let existing = document.getElementById("copiedMessage");
-        if (existing) existing.remove();
-
-        const msg = document.createElement('div');
-        msg.textContent = "✔️ Koden är kopierad!";
-        msg.className = "copy-feedback";
-        msg.id = "copiedMessage";
-        document.getElementById("winSection").appendChild(msg);
-
+        document.getElementById('copyMessage').innerText = '✔️ Koden är kopierad!';
         setTimeout(() => {
-          const toRemove = document.getElementById("copiedMessage");
-          if (toRemove) toRemove.remove();
-        }, 2500);
-      }).catch(() => {
-        alert("Kunde inte kopiera koden.");
+          document.getElementById('copyMessage').innerText = '';
+        }, 2000);
       });
     }
   </script>

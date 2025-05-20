@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>Ditt resultat</title>
   <style>
     body {
@@ -60,20 +60,29 @@
     button:hover {
       background: #00b04c;
     }
+
+    .copy-feedback {
+      color: green;
+      font-size: 14px;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
   <div class="result-box">
     <h1>Ditt resultat</h1>
     <p id="scoreText">Poäng: ...</p>
+
     <div id="winSection" style="display: none;">
       <p>🎉 Du har vunnit laddkrediter!</p>
       <div class="code-box" id="codeBox">Kod: ...</div>
       <button onclick="copyCode()">Kopiera kod</button>
     </div>
+
     <div id="loseSection" style="display: none;">
       <p>Försök igen nästa vecka!<br>Snurra lyckohjulet varje dag för en ny chans.</p>
     </div>
+
     <button onclick="goBack()">Tillbaka till appen</button>
   </div>
 
@@ -96,13 +105,25 @@
     }
 
     function goBack() {
-      window.history.back();
+      window.location.href = "leccyapp://home";
     }
 
     function copyCode() {
       const code = document.getElementById("codeBox").textContent.replace("Kod: ", "").trim();
       navigator.clipboard.writeText(code).then(() => {
-        alert("Koden har kopierats!");
+        let existing = document.getElementById("copiedMessage");
+        if (existing) existing.remove();
+
+        const msg = document.createElement('div');
+        msg.textContent = "✔️ Koden är kopierad!";
+        msg.className = "copy-feedback";
+        msg.id = "copiedMessage";
+        document.getElementById("winSection").appendChild(msg);
+
+        setTimeout(() => {
+          const toRemove = document.getElementById("copiedMessage");
+          if (toRemove) toRemove.remove();
+        }, 2500);
       }).catch(() => {
         alert("Kunde inte kopiera koden.");
       });

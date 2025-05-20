@@ -54,7 +54,7 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      margin-top: 20px;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -69,6 +69,7 @@
     <div id="winSection" style="display: none;">
       <p>🎉 Du har vunnit laddkrediter!</p>
       <div class="code-box" id="codeBox">Kod: ...</div>
+      <button onclick="copyCode()">Kopiera kod</button>
     </div>
     <div id="loseSection" style="display: none;">
       <p>Försök igen nästa vecka!<br>Snurra lyckohjulet varje dag för en ny chans.</p>
@@ -95,7 +96,16 @@
     }
 
     function goBack() {
-      window.location.href = "leccyapp://home";
+      window.history.back();
+    }
+
+    function copyCode() {
+      const code = document.getElementById("codeBox").textContent.replace("Kod: ", "").trim();
+      navigator.clipboard.writeText(code).then(() => {
+        alert("Koden har kopierats!");
+      }).catch(() => {
+        alert("Kunde inte kopiera koden.");
+      });
     }
   </script>
 </body>

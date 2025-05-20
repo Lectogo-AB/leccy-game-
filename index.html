@@ -203,6 +203,17 @@
     }
 
     document.getElementById("startBtn").addEventListener("click", () => {
+      localStorage.setItem("bonusPlayedDate", new Date().toISOString().split('T')[0]);
+      document.getElementById("introPopup").style.display = "none";
+      createPlatforms();
+      gameLoop();
+    });
+
+    document.addEventListener("keydown", e => keys[e.key] = true);
+    document.addEventListener("keyup", e => keys[e.key] = false);
+
+    // 🚫 Direkt blockering om bonus redan spelad idag
+    document.addEventListener("DOMContentLoaded", () => {
       if (hasPlayedBonusToday()) {
         document.getElementById("introPopup").innerHTML = `
           <h2>🚫 Bonus redan spelad!</h2>
@@ -210,16 +221,8 @@
           <p>Kom tillbaka om 7 dagar för en ny chans!</p>
           <button onclick="window.location.href='index.html'">🔁 Tillbaka till hjulet</button>
         `;
-      } else {
-        localStorage.setItem("bonusPlayedDate", new Date().toISOString().split('T')[0]);
-        document.getElementById("introPopup").style.display = "none";
-        createPlatforms();
-        gameLoop();
       }
     });
-
-    document.addEventListener("keydown", e => keys[e.key] = true);
-    document.addEventListener("keyup", e => keys[e.key] = false);
   </script>
 </body>
 </html>

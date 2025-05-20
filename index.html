@@ -212,14 +212,14 @@
     document.addEventListener("keydown", e => keys[e.key] = true);
     document.addEventListener("keyup", e => keys[e.key] = false);
 
-    // 🚫 Direkt blockering om bonus redan spelad idag
+    // 🚫 Blockera direkt om redan spelat
     document.addEventListener("DOMContentLoaded", () => {
       if (hasPlayedBonusToday()) {
         document.getElementById("introPopup").innerHTML = `
           <h2>🚫 Bonus redan spelad!</h2>
           <p>Du har redan spelat bonusen idag.</p>
           <p>Kom tillbaka om 7 dagar för en ny chans!</p>
-          <button onclick="window.location.href='index.html'">🔁 Tillbaka till hjulet</button>
+          <button onclick="window.history.back()">🔁 Tillbaka till hjulet</button>
         `;
       }
     });

@@ -101,3 +101,36 @@ body::before {
     transform: translate(-50%, -50%);
   }
 }
+
+/* Bonus redan spelad-popup */
+.popup-title.error {
+  font-size: 22px;
+  color: #d32f2f;
+}
+
+.popup-text {
+  font-size: 16px;
+  margin-top: 12px;
+  color: #333;
+}
+
+.popup-subtext {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 18px;
+}
+
+.back-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background: #007aff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:hover {
+  background: #0063dd;
+}
